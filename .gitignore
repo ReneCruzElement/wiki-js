@@ -1,0 +1,13 @@
+pwd
+wiki/node_modules
+wiki/logs
+.DS_Store
+.env
+
+# Keep most runtime data out of git, but allow postgres storage/init files.
+wiki/data/*
+!wiki/data/.gitkeep
+!wiki/data/postgres/
+!wiki/data/postgres/**
+!wiki/data/postgres-init/
+!wiki/data/postgres-init/**
