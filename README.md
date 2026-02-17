@@ -123,21 +123,82 @@ Documentation is part of our delivery process.
 
 ---
 
-## Local PostgreSQL (Docker)
+## Local Containers (Docker Compose)
 
-This repo includes `docker-compose.yml` with a PostgreSQL service for Wiki.js.
+This project runs as a multi-container stack with:
+- `nginx` (reverse proxy)
+- `wiki` (Wiki.js app)
+- `postgres` (database)
+- `redis` + `redis-exporter` (cache + metrics exporter)
+- `prometheus` (metrics collection)
+- `grafana` (dashboards)
 
-1. Start PostgreSQL:
-   ```bash
-   docker compose up -d postgres
-   ```
-2. Start Wiki.js (from `wiki/`):
-   ```bash
-   node server
-   ```
+### Start the stack
 
-PostgreSQL data is bind-mounted to `wiki/data/postgres`, and init SQL files can be added to `wiki/data/postgres-init`.
+```bash
+docker compose up -d
+```
+
+### Access services
+
+- Wiki.js (through Nginx): `http://localhost`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3001`
+- PostgreSQL from host: `localhost:5433`  
+  DB: `wiki` | User: `wikijs` | Password: `wikijsrocks`
+
+### Common container commands
+
+Check status:
+```bash
+docker compose ps
+```
+
+Follow logs:
+```bash
+docker compose logs -f
+```
+
+Follow logs for a single service:
+```bash
+docker compose logs -f wiki
+docker compose logs -f nginx
+docker compose logs -f postgres
+docker compose logs -f prometheus
+docker compose logs -f grafana
+```
+
+Restart or stop:
+```bash
+docker compose restart
+docker compose stop
+docker compose start
+docker compose down
+```
+
+Open a shell in a running container:
+```bash
+docker compose exec wiki sh
+docker compose exec postgres sh
+docker compose exec redis sh
+```
+
+### Monitoring notes
+
+- Prometheus is preconfigured with `monitoring/prometheus.yml`.
+- Default scrape targets include: Prometheus, Redis exporter, and Grafana.
+- In Grafana, add Prometheus as a data source with URL: `http://prometheus:9090`.
+
+### Persistence and config
+
+- Nginx config: `nginx/default.conf`
+- Prometheus config: `monitoring/prometheus.yml`
+- PostgreSQL data: `wiki/data/postgres`
+- PostgreSQL init scripts: `wiki/data/postgres-init`
+- Redis data: `wiki/data/redis`
+- Prometheus and Grafana data: Docker named volumes (`prometheus_data`, `grafana_data`)
 
 Important:
-- The database "image" is not stored in git; teammates pull `postgres:16-alpine` automatically from Docker Hub.
-- This setup allows committing DB files, but PostgreSQL data folders are large and can cause noisy diffs. For team sharing, SQL dumps/migrations are usually better long-term.
+- Docker images are pulled automatically by Compose on first run.
+- `redis` is internal-only (not published to the host).
+- Wiki.js is intentionally exposed through Nginx (`http://localhost`) instead of directly on host port `3000`.
