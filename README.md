@@ -193,8 +193,8 @@ docker compose exec redis sh
 
 - Nginx config: `nginx/default.conf`
 - Prometheus config: `monitoring/prometheus.yml`
-- PostgreSQL data: `wiki/data/postgres`
 - PostgreSQL init scripts: `wiki/data/postgres-init`
+- PostgreSQL data: Docker named volume (`postgres_data`)
 - Redis data: `wiki/data/redis`
 - Prometheus and Grafana data: Docker named volumes (`prometheus_data`, `grafana_data`)
 
@@ -202,3 +202,23 @@ Important:
 - Docker images are pulled automatically by Compose on first run.
 - `redis` is internal-only (not published to the host).
 - Wiki.js is intentionally exposed through Nginx (`http://localhost`) instead of directly on host port `3000`.
+
+### Windows / WSL note for PostgreSQL
+
+If you see errors like `chmod ... Operation not permitted` for PostgreSQL, it means bind-mount permissions are incompatible on that host filesystem.
+
+This stack uses a named Docker volume for PostgreSQL to avoid that issue. If a previous failed container exists, run:
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+If it still fails because of old state, run:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+Warning: `down -v` deletes local Docker volumes for this stack (database/monitoring data).
